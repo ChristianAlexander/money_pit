@@ -54,7 +54,7 @@ config :spark,
 config :money_pit,
   ecto_repos: [MoneyPit.Repo],
   generators: [timestamp_type: :utc_datetime],
-  ash_domains: [MoneyPit.Accounts]
+  ash_domains: [MoneyPit.Commerce, MoneyPit.Accounts]
 
 # Configures the endpoint
 config :money_pit, MoneyPitWeb.Endpoint,
