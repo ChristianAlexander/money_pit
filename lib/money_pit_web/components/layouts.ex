@@ -19,7 +19,7 @@ defmodule MoneyPitWeb.Layouts do
       <Layouts.app flash={@flash}>
         <h1>Content</h1>
       </Layout.app>
-      
+
   """
   attr :flash, :map, required: true, doc: "the map of flash messages"
 
@@ -44,6 +44,9 @@ defmodule MoneyPitWeb.Layouts do
             <a href={~p"/storefront"} class="btn btn-ghost">Storefront</a>
           </li>
           <li>
+            <a href={~p"/orders"} class="btn btn-ghost">Orders</a>
+          </li>
+          <li>
             <a href={~p"/sign-out"} class="btn btn-ghost">Sign Out</a>
           </li>
           <li>
@@ -54,7 +57,7 @@ defmodule MoneyPitWeb.Layouts do
     </header>
 
     <main class="px-4 py-20 sm:px-6 lg:px-8">
-      <div class="mx-auto max-w-2xl space-y-4">
+      <div class="mx-auto max-w-4xl space-y-4">
         {render_slot(@inner_block)}
       </div>
     </main>

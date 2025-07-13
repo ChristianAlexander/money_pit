@@ -37,6 +37,7 @@ defmodule MoneyPitWeb.Router do
       # on_mount {MoneyPitWeb.LiveUserAuth, :live_no_user}
 
       live "/storefront", StorefrontLive, :index
+      live "/orders", OrdersLive, :index
     end
   end
 
