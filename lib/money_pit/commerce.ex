@@ -11,6 +11,8 @@ defmodule MoneyPit.Commerce do
 
     resource MoneyPit.Commerce.Order do
       define :purchase_product, action: :purchase_product
+      define :list_orders, action: :read
+      define :refund_order, action: :refund
     end
   end
 end

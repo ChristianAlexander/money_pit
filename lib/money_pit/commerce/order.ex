@@ -15,6 +15,7 @@ defmodule MoneyPit.Commerce.Order do
 
   oban do
     triggers do
+      # Payments are processed immediately after an order is created
       trigger :process_payment do
         action :process_payment
         queue :default
@@ -22,6 +23,15 @@ defmodule MoneyPit.Commerce.Order do
         worker_module_name MoneyPit.Commerce.Order.AshOban.Worker.ProcessPayment
         scheduler_module_name MoneyPit.Commerce.Order.AshOban.Scheduler.ProcessPayment
         where expr(state == :created)
+      end
+
+      # Refunds are processed every minute, which is the default schedule for AshOban triggers
+      trigger :perform_refunds do
+        action :perform_refund
+        queue :default
+        where expr(state == :ready_for_refund)
+        worker_module_name MoneyPit.Commerce.Order.AshOban.Worker.PerformRefunds
+        scheduler_module_name MoneyPit.Commerce.Order.AshOban.Scheduler.PerformRefunds
       end
     end
   end
@@ -35,6 +45,7 @@ defmodule MoneyPit.Commerce.Order do
       change relate_actor(:user)
       change set_attribute(:amount, "$0.00")
 
+      # Automatically set the amount based on the product price
       change before_action(fn changeset, context ->
                product_id = Ash.Changeset.get_attribute(changeset, :product_id)
                product = MoneyPit.Commerce.get_product!(product_id, actor: context.actor)
@@ -43,6 +54,10 @@ defmodule MoneyPit.Commerce.Order do
              end)
 
       change run_oban_trigger(:process_payment)
+    end
+
+    update :refund do
+      change set_attribute(:state, :ready_for_refund)
     end
 
     update :process_payment do
@@ -63,16 +78,39 @@ defmodule MoneyPit.Commerce.Order do
         end
       end
     end
+
+    update :perform_refund do
+      description "Perform a refund for an order"
+
+      require_atomic? false
+
+      change fn changeset, _ ->
+        # Simulate a refund processing delay
+        processing_milliseconds = :rand.uniform(5_000) + 2_000
+        Process.sleep(processing_milliseconds)
+
+        Ash.Changeset.change_attribute(changeset, :state, :refunded)
+      end
+    end
   end
 
   policies do
     bypass AshOban.Checks.AshObanInteraction do
       authorize_if action_type(:read)
       authorize_if action(:process_payment)
+      authorize_if action(:perform_refund)
     end
 
     policy action_type(:read) do
+      # Users can see their own orders
       authorize_if relates_to_actor_via(:user)
+
+      # Admins can see all orders
+      authorize_if actor_attribute_equals(:role, :admin)
+    end
+
+    policy action(:refund) do
+      authorize_if actor_attribute_equals(:role, :admin)
     end
 
     policy action_type(:create) do
@@ -89,7 +127,7 @@ defmodule MoneyPit.Commerce.Order do
     end
 
     attribute :state, :atom do
-      constraints one_of: [:created, :paid, :failed]
+      constraints one_of: [:created, :paid, :failed, :ready_for_refund, :refunded]
       default :created
       allow_nil? false
       public? true
