@@ -23,7 +23,7 @@ defmodule MoneyPitWeb.StorefrontLive do
         {:noreply,
          socket
          |> put_flash(:info, "Order placed successfully! Your order is being processed.")
-         |> push_patch(to: ~p"/storefront")}
+         |> push_navigate(to: ~p"/orders/#{order}")}
 
       {:error, error} ->
         {:noreply, put_flash(socket, :error, "Failed to place order: #{inspect(error)}")}

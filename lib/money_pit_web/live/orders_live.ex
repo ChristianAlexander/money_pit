@@ -5,15 +5,28 @@ defmodule MoneyPitWeb.OrdersLive do
 
   @impl true
   def mount(_params, _session, socket) do
+    current_user = socket.assigns.current_user
+    is_admin = current_user.role == :admin
+
     if connected?(socket) do
-      user_id = socket.assigns.current_user.id
-      Phoenix.PubSub.subscribe(MoneyPit.PubSub, "orders:#{user_id}:created")
-      Phoenix.PubSub.subscribe(MoneyPit.PubSub, "orders:#{user_id}:updated")
+      if is_admin do
+        # Admin users subscribe to all orders
+        Phoenix.PubSub.subscribe(MoneyPit.PubSub, "orders:created")
+        Phoenix.PubSub.subscribe(MoneyPit.PubSub, "orders:updated")
+      else
+        # Regular users subscribe to their own orders
+        user_id = current_user.id
+        Phoenix.PubSub.subscribe(MoneyPit.PubSub, "orders:#{user_id}:created")
+        Phoenix.PubSub.subscribe(MoneyPit.PubSub, "orders:#{user_id}:updated")
+      end
     end
+
+    page_title = if is_admin, do: "All Orders", else: "My Orders"
 
     {:ok,
      socket
-     |> assign(:page_title, "My Orders")
+     |> assign(:page_title, page_title)
+     |> assign(:is_admin, is_admin)
      |> stream(:orders, [])}
   end
 
@@ -45,7 +58,6 @@ defmodule MoneyPitWeb.OrdersLive do
         },
         socket
       ) do
-    # Load the product relationship on the order from the notification
     order = Ash.load!(notification.data, :product, actor: socket.assigns.current_user)
 
     {:noreply, stream_insert(socket, :orders, order, at: 0)}
@@ -84,9 +96,33 @@ defmodule MoneyPitWeb.OrdersLive do
     ~H"""
     <Layouts.app flash={@flash}>
       <div class="max-w-7xl mx-auto p-6">
+        <div :if={@is_admin} class="mb-6">
+          <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <div class="flex items-center">
+              <svg class="w-5 h-5 text-blue-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                <path
+                  fill-rule="evenodd"
+                  d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                  clip-rule="evenodd"
+                >
+                </path>
+              </svg>
+              <p class="text-blue-800 font-medium">
+                Admin View: You are viewing orders from all users
+              </p>
+            </div>
+          </div>
+        </div>
+
         <div class="mb-8">
-          <h1 class="text-3xl font-bold text-gray-900 mb-2">My Orders</h1>
-          <p class="text-gray-600">View and manage your order history</p>
+          <h1 class="text-3xl font-bold text-gray-900 mb-2">
+            {if @is_admin, do: "All Orders", else: "My Orders"}
+          </h1>
+          <p class="text-gray-600">
+            {if @is_admin,
+              do: "View and manage all customer orders",
+              else: "View and manage your order history"}
+          </p>
         </div>
 
         <div :if={Enum.empty?(@streams.orders.inserts)} class="text-center py-12">
@@ -121,10 +157,15 @@ defmodule MoneyPitWeb.OrdersLive do
         >
           <.table id="orders" rows={@streams.orders}>
             <:col :let={{_id, order}} label="Order ID">
-              <span class="font-mono text-sm">{String.slice(order.id, 0, 8)}</span>
+              <.link
+                navigate={~p"/orders/#{order.id}"}
+                class="font-mono text-sm text-blue-600 hover:text-blue-800 underline"
+              >
+                {String.slice(order.id, 0, 8)}
+              </.link>
             </:col>
             <:col :let={{_id, order}} label="Product">
-              <div class="font-medium">{order.product.name}</div>
+              {order.product.name}
             </:col>
             <:col :let={{_id, order}} label="Amount">
               <span class="font-semibold text-green-600">

@@ -38,6 +38,7 @@ defmodule MoneyPitWeb.Router do
 
       live "/storefront", StorefrontLive, :index
       live "/orders", OrdersLive, :index
+      live "/orders/:id", OrderDetailsLive, :show
     end
   end
 
