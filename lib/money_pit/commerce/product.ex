@@ -2,7 +2,8 @@ defmodule MoneyPit.Commerce.Product do
   use Ash.Resource,
     otp_app: :money_pit,
     domain: MoneyPit.Commerce,
-    data_layer: AshPostgres.DataLayer
+    data_layer: AshPostgres.DataLayer,
+    authorizers: [Ash.Policy.Authorizer]
 
   postgres do
     table "products"
@@ -11,6 +12,16 @@ defmodule MoneyPit.Commerce.Product do
 
   actions do
     defaults [:read, create: :*]
+  end
+
+  policies do
+    policy action_type(:read) do
+      authorize_if always()
+    end
+
+    policy action_type(:create) do
+      authorize_if actor_attribute_equals(:role, :admin)
+    end
   end
 
   attributes do
