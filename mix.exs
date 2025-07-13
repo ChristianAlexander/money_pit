@@ -34,6 +34,7 @@ defmodule MoneyPit.MixProject do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
+      {:usage_rules, "~> 0.1", only: [:dev]},
       {:oban, "~> 2.0"},
       {:ash_oban, "~> 0.4"},
       {:ex_money_sql, "~> 1.0"},
