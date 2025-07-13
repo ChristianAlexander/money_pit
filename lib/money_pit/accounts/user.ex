@@ -251,6 +251,12 @@ defmodule MoneyPit.Accounts.User do
       sensitive? true
     end
 
+    attribute :role, :atom do
+      constraints one_of: [:user, :admin]
+      default :user
+      allow_nil? false
+    end
+
     attribute :confirmed_at, :utc_datetime_usec
   end
 
