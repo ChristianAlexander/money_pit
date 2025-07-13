@@ -61,6 +61,12 @@ defmodule MoneyPit.Accounts.User do
       prepare AshAuthentication.Preparations.FilterBySubject
     end
 
+    update :set_role do
+      description "Set the role of a user. Only available to admins."
+      argument :role, :atom, allow_nil?: false, constraints: [one_of: [:user, :admin]]
+      change set_attribute(:role, arg(:role))
+    end
+
     update :change_password do
       # Use this action to allow users to change their password by providing
       # their current password and a new password.
@@ -231,6 +237,10 @@ defmodule MoneyPit.Accounts.User do
   policies do
     bypass AshAuthentication.Checks.AshAuthenticationInteraction do
       authorize_if always()
+    end
+
+    policy action(:set_role) do
+      authorize_if actor_attribute_equals(:role, :admin)
     end
 
     policy always() do
