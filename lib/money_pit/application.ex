@@ -11,6 +11,11 @@ defmodule MoneyPit.Application do
       MoneyPitWeb.Telemetry,
       MoneyPit.Repo,
       {DNSCluster, query: Application.get_env(:money_pit, :dns_cluster_query) || :ignore},
+      {Oban,
+       AshOban.config(
+         Application.fetch_env!(:money_pit, :ash_domains),
+         Application.fetch_env!(:money_pit, Oban)
+       )},
       {Phoenix.PubSub, name: MoneyPit.PubSub},
       # Start a worker by calling: MoneyPit.Worker.start_link(arg)
       # {MoneyPit.Worker, arg},

@@ -1,4 +1,5 @@
 import Config
+config :money_pit, Oban, testing: :manual
 config :money_pit, token_signing_secret: "a1GAOsiDJ0EOEVRyRIpE5gCyS/Bdqd8a"
 config :bcrypt_elixir, log_rounds: 1
 config :ash, policies: [show_policy_breakdowns?: true]

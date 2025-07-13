@@ -7,6 +7,15 @@
 # General application configuration
 import Config
 
+config :ash_oban, pro?: false
+
+config :money_pit, Oban,
+  engine: Oban.Engines.Basic,
+  notifier: Oban.Notifiers.Postgres,
+  queues: [default: 10],
+  repo: MoneyPit.Repo,
+  plugins: [{Oban.Plugins.Cron, []}]
+
 config :ex_cldr, default_backend: MoneyPit.Cldr
 
 config :ash,
