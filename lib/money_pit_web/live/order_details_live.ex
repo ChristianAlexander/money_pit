@@ -45,7 +45,7 @@ defmodule MoneyPitWeb.OrderDetailsLive do
          |> put_flash(:info, "Refund request submitted successfully!")
          |> load_order()}
 
-      {:error, error} ->
+      {:error, _error} ->
         {:noreply, put_flash(socket, :error, "Failed to refund")}
     end
   end
@@ -84,7 +84,7 @@ defmodule MoneyPitWeb.OrderDetailsLive do
     case state do
       :created -> mark_steps_status(base_steps, :created)
       :paid -> mark_steps_status(base_steps, :paid)
-      :failed -> add_failed_step(base_steps)
+      :failed -> add_failed_step()
       :ready_for_refund -> add_refund_steps(base_steps, :ready_for_refund)
       :refunded -> add_refund_steps(base_steps, :refunded)
     end
@@ -105,7 +105,7 @@ defmodule MoneyPitWeb.OrderDetailsLive do
     end)
   end
 
-  defp add_failed_step(steps) do
+  defp add_failed_step() do
     failed_step = %{
       id: :failed,
       title: "Payment Failed",
@@ -180,15 +180,15 @@ defmodule MoneyPitWeb.OrderDetailsLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash}>
+    <Layouts.app flash={@flash} current_user={@current_user}>
       <div class="max-w-4xl mx-auto p-6">
         <div class="mb-8">
           <.link navigate={~p"/orders"} class="btn btn-ghost btn-sm mb-4">
             <.icon name="hero-arrow-left" class="w-4 h-4 mr-2" /> Back to Orders
           </.link>
 
-          <h1 class="text-3xl font-bold text-gray-900 mb-2">Order Details</h1>
-          <p class="text-gray-600">Track your order progress</p>
+          <h1 class="text-3xl font-bold text-base-content mb-2">Order Details</h1>
+          <p class="text-base-content/70">Track your order progress</p>
         </div>
 
         <div :if={@order} class="space-y-8">
@@ -207,7 +207,7 @@ defmodule MoneyPitWeb.OrderDetailsLive do
               >
                 <div class="text-left">
                   <div class="font-medium">{step.title}</div>
-                  <div class="text-sm text-gray-500">{step.description}</div>
+                  <div class="text-sm text-base-content/50">{step.description}</div>
                 </div>
               </li>
             </ul>
@@ -218,7 +218,7 @@ defmodule MoneyPitWeb.OrderDetailsLive do
               <div class="flex justify-between items-start mb-6">
                 <div>
                   <h2 class="card-title text-2xl mb-2">Order #{String.slice(@order.id, 0, 8)}</h2>
-                  <p class="text-sm text-gray-500">
+                  <p class="text-sm text-base-content/50">
                     Placed on {Calendar.strftime(@order.inserted_at, "%B %d, %Y at %I:%M %p")}
                   </p>
                 </div>
@@ -232,7 +232,7 @@ defmodule MoneyPitWeb.OrderDetailsLive do
               <div class="bg-base-200 rounded-lg p-4 mb-6">
                 <h3 class="font-semibold text-lg mb-2">{@order.product.name}</h3>
                 <div class="flex justify-between items-center">
-                  <span class="text-gray-600">Amount</span>
+                  <span class="text-base-content/70">Amount</span>
                   <span class="font-bold text-xl text-success">
                     {Money.to_string!(@order.amount)}
                   </span>
@@ -257,7 +257,7 @@ defmodule MoneyPitWeb.OrderDetailsLive do
           <div class="card bg-base-100 shadow-xl">
             <div class="card-body">
               <h3 class="card-title">Need Help?</h3>
-              <p class="text-sm text-gray-600 mb-4">
+              <p class="text-sm text-base-content/70 mb-4">
                 If you have questions about your order, we're here to help.
               </p>
               <div class="space-y-2">
@@ -275,7 +275,7 @@ defmodule MoneyPitWeb.OrderDetailsLive do
 
         <div :if={!@order} class="text-center py-12">
           <div class="loading loading-spinner loading-lg"></div>
-          <p class="mt-4 text-gray-500">Loading order details...</p>
+          <p class="mt-4 text-base-content/50">Loading order details...</p>
         </div>
       </div>
     </Layouts.app>

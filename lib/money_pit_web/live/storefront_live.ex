@@ -38,17 +38,17 @@ defmodule MoneyPitWeb.StorefrontLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash}>
+    <Layouts.app flash={@flash} current_user={@current_user}>
       <div class="max-w-6xl mx-auto p-6">
         <div class="mb-8">
-          <h1 class="text-3xl font-bold text-gray-900 mb-2">MoneyPit</h1>
-          <p class="text-gray-600">What do you want to buy today?</p>
+          <h1 class="text-3xl font-bold text-base-content mb-2">MoneyPit</h1>
+          <p class="text-base-content/70">What do you want to buy today?</p>
         </div>
 
         <div :if={@products == []} class="text-center py-12">
-          <div class="text-gray-500">
+          <div class="text-base-content/50">
             <svg
-              class="mx-auto h-24 w-24 text-gray-400"
+              class="mx-auto h-24 w-24 text-base-content/40"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -60,23 +60,28 @@ defmodule MoneyPitWeb.StorefrontLive do
                 d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
               />
             </svg>
-            <h3 class="mt-4 text-lg font-medium text-gray-900">No products available</h3>
-            <p class="mt-2 text-sm text-gray-500">There are currently no products in the store.</p>
+            <h3 class="mt-4 text-lg font-medium text-base-content">No products available</h3>
+            <p class="mt-2 text-sm text-base-content/50">
+              There are currently no products in the store.
+            </p>
           </div>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <div :for={product <- @products} class="bg-white rounded-lg shadow-md overflow-hidden">
+          <div :for={product <- @products} class="bg-base-100 rounded-lg shadow-md overflow-hidden">
             <div class="p-6">
-              <h3 class="text-xl font-semibold text-gray-900 mb-2">{product.name}</h3>
-              <div class="text-2xl font-bold text-green-600 mb-4">
+              <h3 class="text-xl font-semibold text-base-content mb-2">{product.name}</h3>
+              <div class="text-2xl font-bold text-success mb-4">
                 {Money.to_string!(product.price)}
               </div>
               <.button
+                :if={
+                  MoneyPit.Commerce.can_purchase_product?(@current_user, %{product_id: product.id})
+                }
                 phx-click="purchase"
                 phx-value-product_id={product.id}
                 phx-disable-with="Ordering…"
-                class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200"
+                class="w-full btn-primary font-semibold py-2 px-4 rounded-lg transition-colors duration-200"
               >
                 Purchase Now
               </.button>

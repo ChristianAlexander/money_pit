@@ -22,6 +22,7 @@ defmodule MoneyPitWeb.Layouts do
 
   """
   attr :flash, :map, required: true, doc: "the map of flash messages"
+  attr :current_user, :map, doc: "the current user", default: %{}
 
   attr :current_scope, :map,
     default: nil,
@@ -55,6 +56,10 @@ defmodule MoneyPitWeb.Layouts do
         </ul>
       </div>
     </header>
+
+    <div :if={@current_user.role == :admin} class="bg-info text-info-content text-center py-2">
+      You are signed in as an admin user.
+    </div>
 
     <main class="px-4 py-8 sm:px-6 lg:px-8">
       <div class="mx-auto max-w-4xl space-y-4">
