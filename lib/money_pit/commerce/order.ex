@@ -6,7 +6,7 @@ defmodule MoneyPit.Commerce.Order do
     domain: MoneyPit.Commerce,
     data_layer: AshPostgres.DataLayer,
     authorizers: [Ash.Policy.Authorizer],
-    extensions: [AshOban],
+    extensions: [AshOban, AshStateMachine],
     notifiers: [Ash.Notifier.PubSub]
 
   postgres do
@@ -37,6 +37,17 @@ defmodule MoneyPit.Commerce.Order do
     end
   end
 
+  state_machine do
+    initial_states [:created]
+    default_initial_state :created
+
+    transitions do
+      transition :process_payment, from: :created, to: [:paid, :failed]
+      transition :perform_refund, from: :ready_for_refund, to: :refunded
+      transition :refund, from: :paid, to: :ready_for_refund
+    end
+  end
+
   actions do
     defaults [:read]
 
@@ -58,7 +69,7 @@ defmodule MoneyPit.Commerce.Order do
     end
 
     update :refund do
-      change set_attribute(:state, :ready_for_refund)
+      change transition_state(:ready_for_refund)
     end
 
     update :process_payment do
@@ -71,9 +82,9 @@ defmodule MoneyPit.Commerce.Order do
       change fn changeset, _ ->
         if :rand.uniform() > 0.1 do
           # Simulate a successful payment 90% of the time
-          Ash.Changeset.change_attribute(changeset, :state, :paid)
+          AshStateMachine.transition_state(changeset, :paid)
         else
-          Ash.Changeset.change_attribute(changeset, :state, :failed)
+          AshStateMachine.transition_state(changeset, :failed)
         end
       end
     end
@@ -84,7 +95,7 @@ defmodule MoneyPit.Commerce.Order do
       require_atomic? false
 
       change MoneyPit.Commerce.Changes.Sleep
-      change set_attribute(:state, :refunded)
+      change transition_state(:refunded)
     end
   end
 
@@ -125,13 +136,6 @@ defmodule MoneyPit.Commerce.Order do
     uuid_primary_key :id
 
     attribute :amount, :money do
-      allow_nil? false
-      public? true
-    end
-
-    attribute :state, :atom do
-      constraints one_of: [:created, :paid, :failed, :ready_for_refund, :refunded]
-      default :created
       allow_nil? false
       public? true
     end
