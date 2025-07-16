@@ -1,0 +1,5 @@
+stateDiagram-v2
+created --> paid: process_payment
+paid --> ready_for_refund: refund
+ready_for_refund --> refunded: perform_refund
+created --> failed: process_payment
