@@ -55,7 +55,7 @@ defmodule MoneyPitWeb.OrdersLive do
         },
         socket
       ) do
-    order = Ash.load!(notification.data, :product, actor: socket.assigns.current_user)
+    order = Ash.load!(notification.data, [:product, :user], actor: socket.assigns.current_user)
 
     {:noreply, stream_insert(socket, :orders, order, at: 0)}
   end
@@ -66,7 +66,7 @@ defmodule MoneyPitWeb.OrdersLive do
         socket
       ) do
     # Load the product relationship on the order from the notification
-    order = Ash.load!(notification.data, :product, actor: socket.assigns.current_user)
+    order = Ash.load!(notification.data, [:product, :user], actor: socket.assigns.current_user)
 
     {:noreply, stream_insert(socket, :orders, order)}
   end
@@ -75,7 +75,7 @@ defmodule MoneyPitWeb.OrdersLive do
     orders =
       MoneyPit.Commerce.list_orders!(
         actor: socket.assigns.current_user,
-        load: [:product]
+        load: [:product, :user]
       )
       |> Enum.sort_by(& &1.inserted_at, {:desc, DateTime})
 
@@ -143,6 +143,9 @@ defmodule MoneyPitWeb.OrdersLive do
             </:col>
             <:col :let={{_id, order}} label="Product">
               {order.product.name}
+            </:col>
+            <:col :let={{_id, order}} label="User">
+              {if order.user, do: to_string(order.user.email), else: "No user"}
             </:col>
             <:col :let={{_id, order}} label="Amount">
               <span class="font-semibold text-success">

@@ -243,8 +243,12 @@ defmodule MoneyPit.Accounts.User do
       authorize_if actor_attribute_equals(:role, :admin)
     end
 
-    policy always() do
-      forbid_if always()
+    policy action_type(:read) do
+      # Admins can read all users
+      authorize_if actor_attribute_equals(:role, :admin)
+
+      # Users can read their own user record
+      authorize_if expr(id == ^actor(:id))
     end
   end
 
